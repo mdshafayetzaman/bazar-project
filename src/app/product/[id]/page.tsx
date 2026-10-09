@@ -69,10 +69,7 @@ function LoadingProduct() {
   )
 }
 
-/*
-  Dynamic data access happens inside this component.
-  The parent page renders it within Suspense.
-*/
+
 async function ProductDetailsContent({ params }: ProductPageProps) {
   const { id } = await params
 
@@ -216,7 +213,6 @@ async function ProductDetailsContent({ params }: ProductPageProps) {
           </div>
         </section>
 
-        {/* Price Summary and Market Table */}
         <section className="mt-6 rounded-2xl border border-[#dfe7df] bg-[#fbfdfb] p-5 sm:p-6">
           <h2 className="mb-4 text-xl font-bold">দামের সারসংক্ষেপ</h2>
 
@@ -350,10 +346,7 @@ async function ProductDetailsContent({ params }: ProductPageProps) {
   )
 }
 
-/*
-  Keep params access inside the Suspense boundary.
-  This allows Next.js to stream the dynamic route.
-*/
+
 export default function ProductDetails({ params }: ProductPageProps) {
   return (
     <Suspense fallback={<LoadingProduct />}>

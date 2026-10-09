@@ -40,14 +40,7 @@ export default function ProductCards({ products }: ProductCardsProps) {
           </p>
         </div>
 
-        <select
-          value={sort}
-          onChange={(e) => setSort(e.target.value)}
-          className="max-w-[180px] rounded-xl border border-[#dfe7df] bg-white px-3 py-2 text-sm outline-none"
-        >
-          <option value="high">দাম বেশি থেকে কম</option>
-          <option value="low">দাম কম থেকে বেশি</option>
-        </select>
+    
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">

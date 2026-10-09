@@ -7,11 +7,15 @@ type Product = {
   nameBn: string
   category: string
   categoryNameBn: string
-  price?: number
-  emoji?: string
+  categoryIcon?: string
+  image?: string
+  today: number
+  yesterday: number
   unit?: string
-  change?: number
-  changePercent?: number
+  change?: {
+    dir: 'up' | 'down'
+    pct: number
+  }
 }
 
 const Marquee = async () => {
@@ -31,24 +35,30 @@ const Marquee = async () => {
   const data: Product[] = await response.json()
 
   return (
-    <div className="mt-5 overflow-hidden border-0 bg-blue-100 py-3 shadow-none outline-none focus:outline-none">
+    <div className="mt-5 overflow-hidden border-0 bg-blue-100 py-3 shadow-none outline-none">
       <MarqueeText
         direction="right"
         pauseOnHover
         duration={13}
-        className="border-0 outline-none focus:border-0 focus:outline-none"
+        className="border-0 outline-none"
       >
-        <div className="flex items-center gap-10 border-0 outline-none focus:border-0 focus:outline-none">
+        <div className="flex items-center gap-10">
           {data.map((item) => {
-            const isUp = (item.changePercent ?? 0) >= 0
+            const changePercent =
+              item.yesterday > 0
+                ? ((item.today - item.yesterday) / item.yesterday) * 100
+                : 0
+
+            const isUp = changePercent > 0
+            const isDown = changePercent < 0
 
             return (
               <div
                 key={item.id}
-                className="flex shrink-0 items-center gap-2 border-0 outline-none focus:border-0 focus:outline-none"
+                className="flex shrink-0 items-center gap-2"
               >
                 <span className="text-base">
-                  {item.emoji ?? '🛒'}
+                  {item.categoryIcon ?? item.image ?? '🛒'}
                 </span>
 
                 <span className="text-sm font-semibold text-gray-800">
@@ -56,18 +66,20 @@ const Marquee = async () => {
                 </span>
 
                 <span className="text-sm font-bold text-gray-900">
-                  {item.price ?? '—'} ৳/{item.unit ?? 'একক'}
+                  {item.today} ৳/{item.unit ?? 'একক'}
                 </span>
 
                 <span
-                  className={
+                  className={`text-sm font-bold ${
                     isUp
-                      ? 'text-sm font-bold text-green-600'
-                      : 'text-sm font-bold text-red-500'
-                  }
+                      ? 'text-green-600'
+                      : isDown
+                        ? 'text-red-500'
+                        : 'text-gray-500'
+                  }`}
                 >
-                  {isUp ? '▲' : '▼'}{' '}
-                  {Math.abs(item.changePercent ?? 0)}%
+                  {isUp ? '▲' : isDown ? '▼' : '—'}{' '}
+                  {Math.abs(changePercent).toFixed(1)}%
                 </span>
 
                 <span className="ml-2 text-gray-300">•</span>
