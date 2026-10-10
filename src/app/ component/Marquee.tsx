@@ -20,7 +20,7 @@ type Product = {
 
 const Marquee = async () => {
   const response = await fetch(
-    'https://openapi.programming-hero.com/api/bazardor/products',
+    'https://api.api-store.workers.dev/api/bazardor/products',
     {
       next: {
         revalidate: 60,

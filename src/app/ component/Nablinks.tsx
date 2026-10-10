@@ -1,4 +1,8 @@
+
+'use cache'
+
 import Link from 'next/link'
+import { cacheLife } from 'next/cache'
 
 interface Category {
   id: string | number
@@ -12,9 +16,10 @@ interface NablinksProps {
 }
 
 const Nablinks = async ({ activeSlug }: NablinksProps) => {
+  cacheLife('hours')
+
   const response = await fetch(
-    'https://api.api-store.workers.dev/api/bazardor/categories',
-    { next: { revalidate: 3600 } },
+    'https://openapi.programming-hero.com/api/bazardor/categories',
   )
 
   if (!response.ok) {
@@ -50,3 +55,4 @@ const Nablinks = async ({ activeSlug }: NablinksProps) => {
 }
 
 export default Nablinks
+

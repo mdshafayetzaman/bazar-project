@@ -1,5 +1,7 @@
+
 import Image from 'next/image'
 import Link from 'next/link'
+import { Suspense } from 'react'
 import logoIcon from '@/app/logo-icon.png'
 import Nablinks from './Nablinks'
 import Date from './Date'
@@ -33,16 +35,31 @@ export default function Nav({ logo = 'বাজার দর' }: NavProps) {
 
               <span className="flex items-center gap-2 text-xs font-medium text-gray-500 sm:text-sm">
                 <span className="h-2 w-2 shrink-0 rounded-full bg-green-500" />
-                <Date></Date>
+                <Date />
               </span>
             </div>
           </Link>
 
-         <UserInfo></UserInfo>
+          <UserInfo />
         </div>
 
         <div className="border-t border-gray-100">
-          <Nablinks />
+          <Suspense
+            fallback={
+              <nav className="bg-[#fbfdfb]">
+                <div className="mx-auto flex max-w-6xl gap-2 overflow-hidden px-4 py-2 sm:px-6">
+                  {Array.from({ length: 6 }).map((_, index) => (
+                    <div
+                      key={index}
+                      className="h-10 w-24 shrink-0 animate-pulse rounded-xl bg-gray-200"
+                    />
+                  ))}
+                </div>
+              </nav>
+            }
+          >
+            <Nablinks />
+          </Suspense>
         </div>
       </div>
     </header>
