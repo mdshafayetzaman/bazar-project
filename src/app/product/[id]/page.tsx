@@ -8,7 +8,7 @@ interface ProductPageProps {
   params: Promise<{ id: string }>
 }
 
-const API_URL = 'https://api.api-store.workers.dev/api/bazardor/products'
+const API_URL = 'https://api.abcz.workers.dev/api/bazardor/products'
 
 function formatPrice(value: number) {
   return Number(value).toLocaleString('bn-BD', {

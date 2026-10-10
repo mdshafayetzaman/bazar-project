@@ -1,8 +1,12 @@
+
 'use client'
 
-import { FormEvent, useState } from 'react'
+import { useState, type FormEvent } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { Hind_Siliguri } from 'next/font/google'
+import { authClient } from '@/lib/auth-client'
+import { toast } from 'react-toastify'
 
 const hind = Hind_Siliguri({
   subsets: ['bengali', 'latin'],
@@ -10,24 +14,76 @@ const hind = Hind_Siliguri({
 })
 
 export default function SignUpPage() {
+  const router = useRouter()
+
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [image, setImage] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const [socialLoading, setSocialLoading] = useState<
+    'google' | 'github' | null
+  >(null)
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
 
-    if (
-      !name.trim() ||
-      !email.trim() ||
-      password.length < 8 ||
-      password !== confirmPassword
-    ) {
+    if (password.length < 8) {
+      toast.error('পাসওয়ার্ড কমপক্ষে ৮ অক্ষরের হতে হবে।')
       return
     }
 
-    console.log({ name, email, password })
+    if (password !== confirmPassword) {
+      toast.error('পাসওয়ার্ড দুটি মিলছে না।')
+      return
+    }
+
+    setIsLoading(true)
+
+    try {
+      const { error } = await authClient.signUp.email({
+        name: name.trim(),
+        email: email.trim(),
+        password,
+        image: image.trim() || undefined,
+        callbackURL: '/',
+      })
+
+      if (error) {
+        toast.error(error.message || 'অ্যাকাউন্ট তৈরি করা যায়নি।')
+        return
+      }
+
+      toast.success('অ্যাকাউন্ট তৈরি সফল হয়েছে! 🎉')
+      router.replace('/')
+      router.refresh()
+    } catch {
+      toast.error('সমস্যা হয়েছে। আবার চেষ্টা করুন।')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleSocialSignIn = async (
+    provider: 'google' | 'github',
+  ) => {
+    setSocialLoading(provider)
+
+    try {
+      const { error } = await authClient.signIn.social({
+        provider,
+        callbackURL: '/',
+      })
+
+      if (error) {
+        toast.error(error.message || 'সোশ্যাল সাইন ইন করা যায়নি।')
+        setSocialLoading(null)
+      }
+    } catch {
+      toast.error('সমস্যা হয়েছে। আবার চেষ্টা করুন।')
+      setSocialLoading(null)
+    }
   }
 
   return (
@@ -35,16 +91,21 @@ export default function SignUpPage() {
       className={`${hind.className} flex min-h-screen flex-col items-center justify-center bg-[#f0f5ef] px-4 py-6 text-[#1c2420]`}
     >
       <header className="mb-5 max-w-[400px] text-center">
-        <h1 className="mb-1 text-2xl font-bold">অ্যাকাউন্ট তৈরি করুন</h1>
+        <h1 className="mb-1 text-2xl font-bold">
+          অ্যাকাউন্ট তৈরি করুন
+        </h1>
         <p className="text-sm leading-relaxed text-[#5e6a63]">
           বিনা খরচে সাইন আপ করে সব বিস্তারিত দাম দেখুন।
         </p>
       </header>
 
       <main className="w-full max-w-[420px] rounded-2xl border border-[#dfe7df] bg-[#fafcfa] px-5 py-5 shadow-sm sm:px-6">
-        <form onSubmit={handleSubmit} noValidate>
+        <form onSubmit={handleSubmit}>
           <div className="mb-3">
-            <label htmlFor="name" className="mb-1 block text-sm font-medium">
+            <label
+              htmlFor="name"
+              className="mb-1 block text-sm font-medium"
+            >
               নাম
             </label>
             <input
@@ -56,12 +117,15 @@ export default function SignUpPage() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="যেমন: রহিম উদ্দিন"
-              className="h-11 w-full rounded-lg border border-[#dfe7df] bg-transparent px-3 text-sm outline-none transition placeholder:text-[#26312a] focus:border-[#008b45] focus:ring-2 focus:ring-[#008b45]/15"
+              className="h-11 w-full rounded-lg border border-[#dfe7df] bg-transparent px-3 text-sm outline-none transition placeholder:text-[#89928b] focus:border-[#008b45] focus:ring-2 focus:ring-[#008b45]/15"
             />
           </div>
 
           <div className="mb-3">
-            <label htmlFor="email" className="mb-1 block text-sm font-medium">
+            <label
+              htmlFor="email"
+              className="mb-1 block text-sm font-medium"
+            >
               ইমেইল
             </label>
             <input
@@ -73,7 +137,25 @@ export default function SignUpPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
-              className="h-11 w-full rounded-lg border border-[#dfe7df] bg-transparent px-3 text-sm outline-none transition placeholder:text-[#26312a] focus:border-[#008b45] focus:ring-2 focus:ring-[#008b45]/15"
+              className="h-11 w-full rounded-lg border border-[#dfe7df] bg-transparent px-3 text-sm outline-none transition placeholder:text-[#89928b] focus:border-[#008b45] focus:ring-2 focus:ring-[#008b45]/15"
+            />
+          </div>
+
+          <div className="mb-3">
+            <label
+              htmlFor="image"
+              className="mb-1 block text-sm font-medium"
+            >
+              প্রোফাইল ছবির URL (ঐচ্ছিক)
+            </label>
+            <input
+              id="image"
+              name="image"
+              type="url"
+              value={image}
+              onChange={(e) => setImage(e.target.value)}
+              placeholder="https://example.com/photo.jpg"
+              className="h-11 w-full rounded-lg border border-[#dfe7df] bg-transparent px-3 text-sm outline-none transition placeholder:text-[#89928b] focus:border-[#008b45] focus:ring-2 focus:ring-[#008b45]/15"
             />
           </div>
 
@@ -94,7 +176,7 @@ export default function SignUpPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="কমপক্ষে ৮ অক্ষর"
-              className="h-11 w-full rounded-lg border border-[#dfe7df] bg-transparent px-3 text-sm outline-none transition placeholder:text-[#26312a] focus:border-[#008b45] focus:ring-2 focus:ring-[#008b45]/15"
+              className="h-11 w-full rounded-lg border border-[#dfe7df] bg-transparent px-3 text-sm outline-none transition placeholder:text-[#89928b] focus:border-[#008b45] focus:ring-2 focus:ring-[#008b45]/15"
             />
           </div>
 
@@ -115,8 +197,9 @@ export default function SignUpPage() {
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="আবার লিখুন"
-              className="h-11 w-full rounded-lg border border-[#dfe7df] bg-transparent px-3 text-sm outline-none transition placeholder:text-[#26312a] focus:border-[#008b45] focus:ring-2 focus:ring-[#008b45]/15"
+              className="h-11 w-full rounded-lg border border-[#dfe7df] bg-transparent px-3 text-sm outline-none transition placeholder:text-[#89928b] focus:border-[#008b45] focus:ring-2 focus:ring-[#008b45]/15"
             />
+
             {confirmPassword && password !== confirmPassword && (
               <p className="mt-1 text-xs text-red-600">
                 পাসওয়ার্ড দুটি মিলছে না।
@@ -126,9 +209,12 @@ export default function SignUpPage() {
 
           <button
             type="submit"
-            className="h-11 w-full cursor-pointer rounded-lg bg-[#008b45] text-sm font-semibold text-white shadow-sm transition hover:bg-[#00763b] active:translate-y-px focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#008b45]"
+            disabled={isLoading || socialLoading !== null}
+            className="h-11 w-full cursor-pointer rounded-lg bg-[#008b45] text-sm font-semibold text-white shadow-sm transition hover:bg-[#00763b] active:translate-y-px disabled:cursor-not-allowed disabled:opacity-60"
           >
-            অ্যাকাউন্ট তৈরি করুন
+            {isLoading
+              ? 'অ্যাকাউন্ট তৈরি হচ্ছে...'
+              : 'অ্যাকাউন্ট তৈরি করুন'}
           </button>
         </form>
 
@@ -139,9 +225,11 @@ export default function SignUpPage() {
         </div>
 
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-          <a
-            href="/auth/google"
-            className="flex h-10 items-center justify-center gap-2 rounded-lg border border-[#dfe7df] px-2 text-sm font-medium transition hover:bg-[#f1f5f1] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#008b45]"
+          <button
+            type="button"
+            disabled={isLoading || socialLoading !== null}
+            onClick={() => handleSocialSignIn('google')}
+            className="flex h-10 items-center justify-center gap-2 rounded-lg border border-[#dfe7df] px-2 text-sm font-medium transition hover:bg-[#f1f5f1] disabled:cursor-not-allowed disabled:opacity-60"
           >
             <svg
               viewBox="0 0 48 48"
@@ -165,12 +253,16 @@ export default function SignUpPage() {
                 d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.6-5.9c-2.1 1.4-4.9 2.3-8.3 2.3-6.3 0-11.6-4.1-13.5-9.8l-7.9 6.1C6.5 42.6 14.6 48 24 48z"
               />
             </svg>
-            Google দিয়ে চালিয়ে যান
-          </a>
+            {socialLoading === 'google'
+              ? 'Google দিয়ে সংযোগ হচ্ছে...'
+              : 'Google দিয়ে চালিয়ে যান'}
+          </button>
 
-          <a
-            href="/auth/github"
-            className="flex h-10 items-center justify-center gap-2 rounded-lg border border-[#dfe7df] px-2 text-sm font-medium transition hover:bg-[#f1f5f1] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#008b45]"
+          <button
+            type="button"
+            disabled={isLoading || socialLoading !== null}
+            onClick={() => handleSocialSignIn('github')}
+            className="flex h-10 items-center justify-center gap-2 rounded-lg border border-[#dfe7df] px-2 text-sm font-medium transition hover:bg-[#f1f5f1] disabled:cursor-not-allowed disabled:opacity-60"
           >
             <svg
               viewBox="0 0 16 16"
@@ -180,8 +272,10 @@ export default function SignUpPage() {
             >
               <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.6 7.6 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z" />
             </svg>
-            GitHub দিয়ে চালিয়ে যান
-          </a>
+            {socialLoading === 'github'
+              ? 'GitHub দিয়ে সংযোগ হচ্ছে...'
+              : 'GitHub দিয়ে চালিয়ে যান'}
+          </button>
         </div>
 
         <p className="mt-4 text-center text-sm">
@@ -204,3 +298,4 @@ export default function SignUpPage() {
     </div>
   )
 }
+

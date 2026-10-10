@@ -24,7 +24,7 @@ const CategoryProducts = async ({ params }: CategoryProductsProps) => {
   const { categoryid } = await params
 
   const response = await fetch(
-    'https://api.api-store.workers.dev/api/bazardor/products',
+    'https://api.abcz.workers.dev/api/bazardor/products',
   )
 
   if (!response.ok) {

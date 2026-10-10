@@ -3,6 +3,7 @@ import Link from 'next/link'
 import logoIcon from '@/app/logo-icon.png'
 import Nablinks from './Nablinks'
 import Date from './Date'
+import UserInfo from './UserInfo'
 
 type NavProps = {
   logo?: string
@@ -37,21 +38,7 @@ export default function Nav({ logo = 'বাজার দর' }: NavProps) {
             </div>
           </Link>
 
-          <nav className="flex shrink-0 items-center gap-2 sm:gap-3">
-            <Link
-              href="/sign-in"
-              className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm font-semibold text-gray-700 transition duration-200 hover:border-green-200 hover:bg-green-50 hover:text-green-700 sm:px-5"
-            >
-              সাইন ইন
-            </Link>
-
-            <Link
-              href="/sign-up"
-              className="rounded-xl bg-green-600 px-3 py-2.5 text-sm font-semibold text-white shadow-md shadow-green-600/20 transition duration-200 hover:-translate-y-0.5 hover:bg-green-700 hover:shadow-lg sm:px-5"
-            >
-              সাইন আপ
-            </Link>
-          </nav>
+         <UserInfo></UserInfo>
         </div>
 
         <div className="border-t border-gray-100">

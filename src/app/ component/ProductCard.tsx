@@ -1,12 +1,15 @@
 
 import { Suspense } from 'react'
+import { connection } from 'next/server'
 import ProductCards from './ProductCards'
 import type { Product } from '../type'
 
 async function ProductList() {
+  await connection()
+
   try {
     const response = await fetch(
-      'https://api.api-store.workers.dev/api/bazardor/products',
+      'https://api.abcz.workers.dev/api/bazardor/products',
       {
         cache: 'no-store',
       },
@@ -31,7 +34,11 @@ async function ProductList() {
 export default function ProductCard() {
   return (
     <Suspense
-      fallback={<div className="p-6 text-center">লোড হচ্ছে...</div>}
+      fallback={
+        <div className="p-6 text-center">
+          লোড হচ্ছে...
+        </div>
+      }
     >
       <ProductList />
     </Suspense>
