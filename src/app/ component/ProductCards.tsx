@@ -30,8 +30,129 @@ export default function ProductCards({ products }: ProductCardsProps) {
     }
   }
 
+  const getUnitLabel = (unit?: string) =>
+    unit === 'kg'
+      ? 'কেজি'
+      : unit === 'litre' || unit === 'liter'
+        ? 'লিটার'
+        : unit === 'dozen'
+          ? 'ডজন'
+          : unit === 'piece'
+            ? 'পিস'
+            : unit || 'কেজি'
+
+
+  const risen = products
+    .filter((p) => p.change?.dir === 'up')
+    .sort(
+      (a, b) =>
+        Math.abs(Number(b.change?.pct ?? 0)) -
+        Math.abs(Number(a.change?.pct ?? 0)),
+    )
+    .slice(0, 6)
+
+  const fallen = products
+    .filter((p) => p.change?.dir === 'down')
+    .sort(
+      (a, b) =>
+        Math.abs(Number(b.change?.pct ?? 0)) -
+        Math.abs(Number(a.change?.pct ?? 0)),
+    )
+    .slice(0, 6)
+
+
+  const renderHighlightCard = (product: Product, dir: 'up' | 'down') => {
+    const image = product.image?.trim()
+    const validImage = isValidImage(image)
+    const isUp = dir === 'up'
+
+    return (
+      <Link
+        key={product.id}
+        href={`/product/${product.id}`}
+        className="flex min-h-[147px] flex-col justify-between rounded-[18px] border border-[#dfe7df] bg-[#fbfdfb] p-[17px] transition hover:-translate-y-0.5 hover:shadow-md"
+      >
+        <div className="flex items-center gap-3">
+          <div className="flex h-[52px] w-[52px] shrink-0 items-center justify-center overflow-hidden rounded-[14px] bg-[#f0f5f0] text-[26px]">
+            {validImage ? (
+              <Image
+                src={image!}
+                alt={product.nameBn}
+                width={52}
+                height={52}
+                unoptimized
+                className="h-full w-full object-contain"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none'
+                }}
+              />
+            ) : (
+              product.categoryIcon || '📦'
+            )}
+          </div>
+
+          <div className="min-w-0">
+            <h3 className="text-[17px] font-bold leading-6 text-[#202a23]">
+              {product.nameBn}
+            </h3>
+            <p className="text-[12px] text-[#465047]">
+              প্রতি {getUnitLabel(product.unit)}
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-3 flex items-end justify-between gap-2">
+          <div>
+            <p className="mb-1 text-[12px] text-[#465047]">আজকের দাম</p>
+            <p className="text-[20px] font-bold leading-none text-[#202a23]">
+              {formatNumber(product.today)}{' '}
+              <span className="text-[15px] font-normal">টাকা</span>
+            </p>
+          </div>
+
+          <div
+            className={`flex shrink-0 items-center gap-1 rounded-full px-3 py-2 text-xs font-semibold ${
+              isUp ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-600'
+            }`}
+          >
+            <span>{isUp ? '▲' : '▼'}</span>
+            <span>
+              {formatNumber(Math.abs(Number(product.change?.pct ?? 0)))}%
+            </span>
+          </div>
+        </div>
+      </Link>
+    )
+  }
+
   return (
     <section className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+
+      {risen.length > 0 && (
+        <div className="mb-10">
+          <h2 className="mb-4 flex items-center gap-2 text-2xl font-bold text-[#202a23]">
+            <span className="text-[16px] text-red-600">▲</span>
+            আজ দাম বেড়েছে
+          </h2>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {risen.map((p) => renderHighlightCard(p, 'up'))}
+          </div>
+        </div>
+      )}
+
+      {fallen.length > 0 && (
+        <div className="mb-10">
+          <h2 className="mb-4 flex items-center gap-2 text-2xl font-bold text-[#202a23]">
+            <span className="text-[16px] text-green-600">▼</span>
+            আজ দাম কমেছে
+          </h2>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {fallen.map((p) => renderHighlightCard(p, 'down'))}
+          </div>
+        </div>
+      )}
+
+     
       <div className="mb-5 flex items-center justify-between gap-3">
         <div>
           <h2 className="text-2xl font-bold text-[#202a23]">সব পণ্য</h2>
@@ -39,8 +160,6 @@ export default function ProductCards({ products }: ProductCardsProps) {
             মোট {formatNumber(products.length)}টি পণ্য
           </p>
         </div>
-
-    
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
